@@ -15588,6 +15588,8 @@ with pkgs;
 
   normalize = callPackage ../applications/audio/normalize { };
 
+  nulloy = callPackage ../applications/audio/nulloy { };
+
   mm = callPackage ../applications/networking/instant-messengers/mm { };
 
   mplayer = callPackage ../applications/video/mplayer ({
