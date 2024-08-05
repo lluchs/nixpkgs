@@ -21,9 +21,13 @@ in
     services.sourcehut = {
       builds = {
         enable = true;
-        # FIXME: see why it does not seem to activate fully.
-        #enableWorker = true;
-        images = { };
+        enableWorker = true;
+        images = {
+          nixos.unstable.x86_64 = import "${pkgs.sourcehut.buildsrht}/lib/images/nixos/image.nix" {
+            hostPlatform = pkgs.stdenv.hostPlatform.system;
+            inherit pkgs;
+          };
+        };
       };
 
       settings."builds.sr.ht" = {
@@ -49,6 +53,6 @@ in
          machine.wait_for_unit("buildsrht.service")
          machine.wait_for_open_port(5002)
          machine.succeed("curl -sL http://localhost:5002 | grep builds.${domain}")
-         #machine.wait_for_unit("buildsrht-worker.service")
+         machine.wait_for_unit("buildsrht-worker.service")
   '';
 })

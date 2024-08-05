@@ -910,11 +910,11 @@ in
           || test "$(cat ${statePath}/docker-image-qemu)" != "${qemuPackage.version}"
           then
             # Create and import qemu:latest image for docker
-            ${pkgs.dockerTools.streamLayeredImage {
+            docker load < ${pkgs.dockerTools.buildLayeredImage {
               name = "qemu";
               tag = "latest";
               contents = [ qemuPackage ];
-            }} | docker load
+            }}
             # Mark down current package version
             echo '${qemuPackage.version}' >${statePath}/docker-image-qemu
           fi
