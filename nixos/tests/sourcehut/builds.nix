@@ -1,6 +1,12 @@
-import ../make-test-python.nix ({ pkgs, lib, ... }:
+import ../make-test-python.nix ({ pkgs, lib, setupHutSubtest, ... }:
 let
   domain = "sourcehut.localdomain";
+  manifest = pkgs.writeText "manifest" ''
+    image: nixos/unstable
+    tasks:
+      - hello-world: |
+          echo hello world
+  '';
 in
 {
   name = "sourcehut";
@@ -54,5 +60,11 @@ in
          machine.wait_for_open_port(5002)
          machine.succeed("curl -sL http://localhost:5002 | grep builds.${domain}")
          machine.wait_for_unit("buildsrht-worker.service")
+
+    ${setupHutSubtest { inherit domain; userName = "nixos-test"; }}
+
+    with subtest("Submit a build"):
+        machine.execute("hut builds submit --follow ${manifest}")
+        machine.succeed("hut builds show 1 | grep -q SUCCESS")
   '';
 })

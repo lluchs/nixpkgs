@@ -1,4 +1,4 @@
-import ../make-test-python.nix ({ pkgs, lib, ... }:
+import ../make-test-python.nix ({ pkgs, lib, setupHutSubtest, ... }:
 let
   domain = "sourcehut.localdomain";
 in
@@ -34,13 +34,6 @@ in
   testScript =
     let
       userName = "nixos-test";
-      userPass = "AutoNixosTestPwd";
-      hutConfig = pkgs.writeText "hut-config" ''
-        instance "${domain}" {
-          # Will be replaced at runtime with the generated token
-          access-token "OAUTH-TOKEN"
-        }
-      '';
       sshConfig = pkgs.writeText "ssh-config" ''
         Host git.${domain}
              IdentityFile = ~/.ssh/id_rsa
@@ -59,13 +52,7 @@ in
            machine.succeed("curl -sL http://localhost:5000 | grep meta.${domain}")
            machine.succeed("curl -sL http://meta.${domain} | grep meta.${domain}")
 
-      with subtest("Create a new user account and OAuth access key"):
-           machine.succeed("echo ${userPass} | metasrht-manageuser -ps -e ${userName}@${domain}\
-                            -t active_paying ${userName}");
-           (_, token) = machine.execute("srht-gen-oauth-tok -i ${domain} -q ${userName} ${userPass}")
-           token = token.strip().replace("/", r"\\/") # Escape slashes in token before passing it to sed
-           machine.execute("mkdir -p ~/.config/hut/")
-           machine.execute("sed s/OAUTH-TOKEN/" + token + "/ ${hutConfig} > ~/.config/hut/config")
+      ${setupHutSubtest { inherit domain userName; }}
 
       with subtest("Check whether git comes up"):
            machine.wait_for_unit("gitsrht-api.service")
